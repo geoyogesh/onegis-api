@@ -1,4 +1,5 @@
-﻿using System;
+﻿using onegis_api.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
@@ -12,6 +13,9 @@ namespace onegis_api
         {
             // Web API configuration and services
             config.Formatters.JsonFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/html"));
+
+            //attaching the handlers
+            config.MessageHandlers.Add(new RequestFormatHandler());
 
             // Web API routes
             config.MapHttpAttributeRoutes();
