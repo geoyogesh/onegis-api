@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 using onegis_api.Utils;
@@ -68,14 +66,14 @@ namespace onegis_api.Controllers
                     command.Parameters.Add(parameter2);
 
                     connection.Open();
-                    var result_count = command.ExecuteNonQuery();
+                    var result_count = await command.ExecuteNonQueryAsync();
                     connection.Close();
                     if (result_count == 1)
                     {
                         return new Dictionary<string, Object>
                         {
                             {"success",true},
-                            {"folder",new Folder(){Created=(DateTime)parameter2.Value,Id=(Guid)parameter1.Value,Title=getq[folderkey],UserName=username}}
+                            {"folder",new Folder(){Created=null,Id=(Guid)parameter1.Value,Title=getq[folderkey],UserName=username}}
                         };
                     }
                     else
