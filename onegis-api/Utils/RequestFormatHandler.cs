@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace onegis_api.Utils
 {
@@ -16,31 +16,46 @@ namespace onegis_api.Utils
         HttpRequestMessage request, CancellationToken cancellationToken)
         {
             //preprocess the request
-            var qs = request.GetQueryStrings();
-            if (qs.ContainsKey("f"))
+            Dictionary<String, String> getq = null;
+            if (request.Method.Method.Equals("POST") || (request.Method.Method.Equals("GET")))
             {
-                if (qs["f"].ToLower().Equals("json") || qs["f"].ToLower().Equals("pjson"))
+                if (request.Method.Method.Equals("POST") && request.Content.IsFormData())
                 {
-                    var response = await base.SendAsync(request, cancellationToken);
-                    if (qs.ContainsKey("callback"))
+                    getq = await request.GetFormData();
+                }
+                else if (request.Method.Method.Equals("GET"))
+                {
+                    getq = request.GetQueryStrings();
+                }
+
+                if (getq.ContainsKey("f"))
+                {
+                    if (getq["f"].ToLower().Equals("json") || getq["f"].ToLower().Equals("pjson"))
                     {
-                        var str = String.Format("{0}({1})",qs["callback"],await response.Content.ReadAsStringAsync());
-                        response.Content = new StringContent(str);
+                        var response = await base.SendAsync(request, cancellationToken);
+                        if (getq.ContainsKey("callback"))
+                        {
+                            var str = String.Format("{0}({1})", getq["callback"], await response.Content.ReadAsStringAsync());
+                            response.Content = new StringContent(str, Encoding.UTF8, "text/plain");
+                            return response;
+                        }
+                        response.Content = new StringContent(await response.Content.ReadAsStringAsync(), Encoding.UTF8, "text/plain");
+                        return response;
                     }
-                    return response;
                 }
             }
 
             //post process the request
-                var resp = new HttpResponseMessage(HttpStatusCode.Forbidden)
-                {
-                    Content = new StringContent("Error")
-                };
+            var resp = new HttpResponseMessage(HttpStatusCode.Forbidden)
+            {
+                Content = new StringContent("Error thrown by handler")
+            };
 
-                // Note: TaskCompletionSource creates a task that does not contain a delegate.
-                var tsc = new TaskCompletionSource<HttpResponseMessage>();
-                tsc.SetResult(resp);   // Also sets the task state to "RanToCompletion"
-                return await tsc.Task;            
+            // Note: TaskCompletionSource creates a task that does not contain a delegate.
+            var tsc = new TaskCompletionSource<HttpResponseMessage>();
+            tsc.SetResult(resp);   // Also sets the task state to "RanToCompletion"
+            return await tsc.Task;
+
         }
     }
 }

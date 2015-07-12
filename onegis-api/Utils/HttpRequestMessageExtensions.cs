@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Web;
+using System.Threading.Tasks;
 
 namespace onegis_api.Utils
 {
@@ -13,6 +13,19 @@ namespace onegis_api.Utils
         /// </summary>
         public static class HttpRequestMessageExtensions
         {
+            
+            public static async Task<Dictionary<string, string>> GetFormData(this HttpRequestMessage request)
+            {
+                var s = (await request.Content.ReadAsStringAsync()).Split('\n');
+                var p = new Dictionary<string, string>();
+                foreach (var item in s)
+                {
+                    var i= item.Split(':');
+                    p.Add(i[0].Trim(),i[1].Trim());
+                }
+                 return p;
+            }
+
 
             /// <summary>
             /// Returns a dictionary of QueryStrings that's easier to work with 

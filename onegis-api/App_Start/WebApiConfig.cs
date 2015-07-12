@@ -13,6 +13,7 @@ namespace onegis_api
         {
             // Web API configuration and services
             config.Formatters.JsonFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/html"));
+            //config.Formatters.JsonFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/plain"));
 
             //attaching the handlers
             config.MessageHandlers.Add(new RequestFormatHandler());
