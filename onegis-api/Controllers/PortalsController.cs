@@ -24,28 +24,52 @@ namespace onegis_api.Controllers
         [AllowAnonymous]
         [Route("sharing/rest/portals/languages")]
         [HttpGet]
-        public String GetLanguages()
+        public List<LanguageModel> GetLanguages()
         {
-            //ConnectionMultiplexer connection = ConnectionMultiplexer.Connect();
-            //IDatabase cache = connection.GetDatabase();
+            var key = "urn:languages:";
 
-            //String
-            //cache.StringSet("i",1);
-            //Console.WriteLine(cache.StringGet("i"));
+            using (var cachecon = ConnectionMultiplexer.Connect(ConfigurationManager.ConnectionStrings["CacheDB"].ToString()))
+            {
+                IDatabase cache = cachecon.GetDatabase();
+                if (cache.KeyExists(key))
+                {
+                    return JsonConvert.DeserializeObject<List<LanguageModel>>(cache.StringGet(key));
+                }
+            }
 
-            //Object
-            //cache.StringSet("i",JsonConvert.SerializeObject(contact));
-            //JsonConvert.DeserializeObject<Object>
+            var languages = new List<LanguageModel>(30);
+            using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["SQLStore"].ToString()))
+            {
+                var command = new SqlCommand("SELECT [LANGUAGE],[CULTURE],[LOCALIZEDNAME] FROM [OneGISDB].[dbo].[LANGUAGES]", connection);
+                connection.Open();
+                var reader = command.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        languages.Add(new LanguageModel()
+                        {
+                            Language = reader.GetString(0),
+                            Culture = reader.GetString(1),
+                            LocalizedName = reader.GetString(2)
+                        });
+                    }
+                }
+                reader.Close();
+            }
+            if (languages.Count == 0)
+            {
+                using (var cachecon = ConnectionMultiplexer.Connect(ConfigurationManager.ConnectionStrings["CacheDB"].ToString()))
+                {
+                    IDatabase cache = cachecon.GetDatabase();
+                    if (cache.KeyExists(key))
+                    {
+                        cache.StringSetAsync(key, JsonConvert.SerializeObject(languages));
+                    }
+                }
+            }
 
-            //using (var context = new OneGISDBEntities())
-            //{
-            //    //var L2EQuery = context.LANGUAGES.where(s => s.StudentName == "Bill");
-
-            //    //var student = L2EQuery.FirstOrDefault<Student>();
-
-            //}
-
-            return "hi";
+            return languages;
         }
 
         [AllowAnonymous]
@@ -83,7 +107,12 @@ namespace onegis_api.Controllers
                 {
                     while (reader.Read())
                     {
-                        regions.Add(new RegionModel(reader.GetString(0), reader.GetString(1), reader.GetString(2)));
+                        regions.Add(new RegionModel()
+                        {
+                            Name = reader.GetString(0),
+                            Region = reader.GetString(1),
+                            LocalizedName = reader.GetString(2)
+                        });
                     }
                 }
                 reader.Close();

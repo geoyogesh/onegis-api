@@ -24,12 +24,12 @@ namespace onegis_api.Controllers
             {
                 using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["SQLStore"].ToString()))
                 {
-                    var command = new SqlCommand();
-                    command.Connection = connection;
-                    command.CommandText = "[dbo].[SP_CREATE_FOLDER]";
-                    command.CommandType = CommandType.StoredProcedure;
-
-
+                    var command = new SqlCommand
+                    {
+                        Connection = connection,
+                        CommandText = "[dbo].[SP_CREATE_FOLDER]",
+                        CommandType = CommandType.StoredProcedure,
+                    };
                     command.Parameters.Add(new SqlParameter
                     {
                         ParameterName = "@USERNAME",
@@ -45,17 +45,18 @@ namespace onegis_api.Controllers
                         Value = getq[folderkey],
                         Direction = ParameterDirection.Input
                     });
+                    var guid = Guid.NewGuid();
+                    command.Parameters.Add(new SqlParameter()
+                    {
+                        ParameterName = "@GUID",
+                        SqlDbType = SqlDbType.UniqueIdentifier,
+                        Value = guid,
+                        Direction = ParameterDirection.Input
+                    });
 
 
                     //command.Parameters.AddWithValue("@USERNAME",username);
                     //command.Parameters.AddWithValue("@FOLDERNAME", getq[folderkey]);
-                    var parameter1 = new SqlParameter()
-                    {
-                        ParameterName = "@GUID",
-                        SqlDbType = SqlDbType.UniqueIdentifier,
-                        Direction = ParameterDirection.Output
-                    };
-                    command.Parameters.Add(parameter1);
 
                     var parameter2 = new SqlParameter()
                     {
@@ -66,27 +67,19 @@ namespace onegis_api.Controllers
                     command.Parameters.Add(parameter2);
 
                     connection.Open();
-                    var result_count = await command.ExecuteNonQueryAsync();
+                    var result_count = command.ExecuteNonQueryAsync();
                     connection.Close();
-                    if (result_count == 1)
-                    {
                         return new Dictionary<string, Object>
                         {
                             {"success",true},
-                            {"folder",new Folder(){Created=null,Id=(Guid)parameter1.Value,Title=getq[folderkey],UserName=username}}
+                            {"folder",new Folder(){Created=null,Id=(Guid)guid,Title=getq[folderkey],UserName=username}}
                         };
-                    }
-                    else
-                    {
-                        return new Dictionary<string, Object>
+                }
+            }
+            return new Dictionary<string, Object>
                         {
                             {"success",false}
                         };
-                    }
-
-                }
-            }
-            return null;
         }
     }
 }
