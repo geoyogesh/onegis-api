@@ -99,11 +99,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\CommunityGroupsController.cs" />
+    <Compile Include="Controllers\CommunityUsersController.cs" />
     <Compile Include="Controllers\PortalsController.cs" />
     <Compile Include="Controllers\UsersController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\Community.cs" />
+    <Compile Include="Models\Group.cs" />
     <Compile Include="Models\RegionModel.cs" />
     <Compile Include="Models\Folder.cs" />
     <Compile Include="Utils\HttpRequestMessageExtensions.cs" />
